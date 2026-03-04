@@ -14,9 +14,9 @@ const routes: RouteRecordRaw[] = [
     component: CreateAgent
   },
   {
-    path: '/edit',
-    name: 'CreateAgent',
-    component: CreateAgent
+    path:'/demo',
+    name:'Demo',
+    component: () => import('../views/demo.vue')
   }
 ]
 

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { ElButton, ElCard, ElInput, ElMessage, ElUpload, UploadProps, UploadFile } from 'element-plus'
+import { ElButton, ElInput, ElMessage, ElUpload, UploadProps, UploadFile } from 'element-plus'
 import { UploadFilled } from '@element-plus/icons-vue'
 
 interface AgentForm {
@@ -114,18 +114,18 @@ const handleSave = () => {
     return
   }
   
-  loading.value = true
+  // loading.value = true
   // 模拟保存操作
-  setTimeout(() => {
-    if (isEditMode.value) {
-      ElMessage.success('修改成功！')
-    } else {
-      ElMessage.success('创建成功！')
-    }
-    loading.value = false
-    // 跳转回首页
-    router.push('/')
-  }, 1000)
+  // setTimeout(() => {
+  //   if (isEditMode.value) {
+  //     ElMessage.success('修改成功！')
+  //   } else {
+  //     ElMessage.success('创建成功！')
+  //   }
+  //   loading.value = false
+  //   // 跳转回首页
+  //   router.push('/')
+  // }, 1000)
 }
 
 const handleCancel = () => {
@@ -135,67 +135,66 @@ const handleCancel = () => {
 
 <template>
   <div class="create-container">
-          <div class="card-header">
-            <span>{{ pageTitle }}</span>
-          </div>
-          <el-form :model="agentForm" label-width="150px" style="width: 80%; ">
-            <el-form-item label="智能体名称">
-            <el-input
-                v-model="agentForm.name"
-                placeholder="请输入智能体名称"
-                size="large"
-                clearable
-            />
-            </el-form-item>
-            
-            <el-form-item label="描述信息">
-            <el-input
-                v-model="agentForm.description"
-                type="textarea"
-                :rows="4"
-                placeholder="请输入智能体描述信息"
-                size="large"
-                maxlength="500"
-                show-word-limit
-                resize="none"
-            />
-            </el-form-item>
+      <div class="card-header">
+        <span>{{ pageTitle }}</span>
+      </div>
+      <el-form :model="agentForm" label-width="150px" style="width: 80%; ">
+        <el-form-item label="智能体名称">
+        <el-input
+            v-model="agentForm.name"
+            placeholder="请输入智能体名称"
+            size="large"
+            clearable
+        />
+        </el-form-item>
+        
+        <el-form-item label="描述信息">
+        <el-input
+            v-model="agentForm.description"
+            type="textarea"
+            :rows="4"
+            placeholder="请输入智能体描述信息"
+            size="large"
+            maxlength="500"
+            show-word-limit
+            resize="none"
+        />
+        </el-form-item>
 
-            <el-form-item label="上传文件（非必填）">
-            <el-upload
-                v-model:file-list="fileList"
-                class="upload-demo"
-                drag
-                action="#"
-                :auto-upload="false"
-                :before-upload="beforeUpload"
-                :limit="10"
-                :on-exceed="handleExceed"
-                :on-remove="handleRemove"
-                multiple
-            >
-                <el-icon class="el-icon--upload"><upload-filled /></el-icon>
-                <div class="el-upload__text">
-                将文件拖到此处，或<em>点击上传</em>
-                </div>
-                <template #tip>
-                <div class="el-upload__tip">
-                    支持文本文件和图片文件，单个文件大小不超过 10MB
-                </div>
-                </template>
-            </el-upload>
-            </el-form-item>
-
-            <div class="button-group">
-            <el-button @click="handleCancel" size="large" class="cancel-btn">
-                取消
-            </el-button>
-            <el-button type="primary" @click="handleSave" :loading="loading" size="large" class="submit-btn">
-                {{ buttonText }}
-            </el-button>
+        <el-form-item label="上传文件（非必填）">
+        <el-upload
+            v-model:file-list="fileList"
+            class="upload-demo"
+            drag
+            action="#"
+            :auto-upload="false"
+            :before-upload="beforeUpload"
+            :limit="10"
+            :on-exceed="handleExceed"
+            :on-remove="handleRemove"
+            multiple
+        >
+            <el-icon class="el-icon--upload"><upload-filled /></el-icon>
+            <div class="el-upload__text">
+            将文件拖到此处，或<em>点击上传</em>
             </div>
-          </el-form>
-       
+            <template #tip>
+            <div class="el-upload__tip">
+                支持文本文件和图片文件，单个文件大小不超过 10MB
+            </div>
+            </template>
+        </el-upload>
+        </el-form-item>
+
+        <div class="button-group">
+        <el-button @click="handleCancel" size="large" class="cancel-btn">
+            取消
+        </el-button>
+        <el-button type="primary" @click="handleSave" :loading="loading" size="large" class="submit-btn">
+            {{ buttonText }}
+        </el-button>
+        </div>
+      </el-form>
   </div>
 </template>
 

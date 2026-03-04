@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { ref,reactive } from 'vue'
+import { ref,reactive, onBeforeMount } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElButton, ElCard, ElInput, ElMessage, ElTag, ElRow, ElCol, ElDropdown, ElDropdownMenu, ElDropdownItem, ElMessageBox } from 'element-plus'
 import { MoreFilled } from '@element-plus/icons-vue'
-
+import { getAgentList } from '@/api/index'
 const router = useRouter()
 
 interface Agent {
@@ -11,42 +11,24 @@ interface Agent {
   name: string
   description: string
 }
-
-const randomId = (): number => {
-  return Math.floor(Math.random() * 100)
-}
-
+let agent_list= ref<Agent[]>([])
+const getAgentData = async () => {
+  try {
+    
+    const response = await getAgentList()
+    agent_list.value = response.data
+  } catch (error) {
+    console.error('获取智能体列表失败:', error)
+  }
+} 
 const inputMessage = ref<string>('')
 const loading = ref<boolean>(false)
-const agent_list = reactive<Agent[]>([
-  {
-    id: randomId(),
-    name: '智能体A',
-    description: '这是智能体A的描述信息。它可以处理各种任务，并提供智能化的解决方案。'
-  },
-  {
-    id: randomId(),
-    name: '智能体B',
-    description: '这是智能体B的描述信息。它可以处理各种任务，并提供智能化的解决方案。'
-  }
-])
 
-const addAgent = () => {
-  const newAgent: Agent = {
-    id: randomId(),
-    name: `智能体${String.fromCharCode(65 + agent_list.length)}`,
-    description: `这是智能体${String.fromCharCode(65 + agent_list.length)}的描述信息。它可以处理各种任务，并提供智能化的解决方案。`
-  }
-  agent_list.push(newAgent)
-}
+
 
 // 新建按钮点击事件，跳转到创建页面
 const handleCreate = () => {
   router.push('/create')
-}
-
-const handleClick = () => {
-  ElMessage.success('点击成功！')
 }
 
 const handleSend = () => {
@@ -82,13 +64,17 @@ const handleDelete = (agent: Agent) => {
       ElMessage.info('已取消删除')
     })
 }
-
 const handleEdit = (agent: Agent) => {
   router.push({
-    path: '/edit',
+    path: '/create',
     query: { id: agent.id.toString() }
   })
 }
+
+onBeforeMount(() => {
+  getAgentData()
+})
+
 </script>
 
 <template>
@@ -109,7 +95,7 @@ const handleEdit = (agent: Agent) => {
             </div>
           </template>
             <div class="tech-stack">
-              <div v-if="agent_list.length > 0" >
+              <div v-if="agent_list.length > 0">
                     <div v-for="agent in agent_list" :key="agent.id" class="agent-tag" >
                         <span>{{ agent.name }}</span>
                         <el-dropdown placement="bottom" trigger="hover">
@@ -133,7 +119,7 @@ const handleEdit = (agent: Agent) => {
         <el-card class="demo-card">
           <template #header>
             <div class="card-header">
-              <span>交互演示</span>
+              <span>对话框</span>
             </div>
           </template>
           <div class="demo-content">
@@ -246,7 +232,7 @@ const handleEdit = (agent: Agent) => {
 .agent-tag .el-icon:focus {
     outline: none;
 }
-::v-deep (.el-card__body) {
-  padding: 0px;
+:deep(.el-card__body) {
+  padding: 10px;
 }
 </style>
