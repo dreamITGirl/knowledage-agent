@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed } from 'vue'
+import { ref, reactive, computed, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElButton, ElInput, ElMessage, ElUpload, UploadProps, UploadFile } from 'element-plus'
 import { uploadFileFunc, createAgent, getAgentDetail, updateAgent } from '@/api'
@@ -17,7 +17,8 @@ const agentForm = reactive<AgentForm>({
 })
 const loading = ref(false)
 const fileList = ref<UploadFile[]>([])
-const file_path_list = ref<UploadFile[]>([])
+const file_path_list = ref<string[]>([])
+const uidToPath = ref<Record<string, string>>({})
 
 // 判断是否为编辑模式
 const isEditMode = computed(() => {
@@ -34,29 +35,66 @@ const buttonText = computed(() => {
   return isEditMode.value ? '保存' : '创建'
 })
 
-// 组件挂载时，如果是编辑模式，从后端拉取详情并填充表单
-onMounted(async () => {
-  if (isEditMode.value && route.query.id) {
-    const agentId = parseInt(route.query.id as string)
-    if (Number.isNaN(agentId)) return
+const resetForm = () => {
+  agentForm.name = ''
+  agentForm.description = ''
+  fileList.value = []
+  file_path_list.value = []
+  uidToPath.value = {}
+}
+
+const rebuildFilePathList = () => {
+  file_path_list.value = Object.values(uidToPath.value)
+}
+
+const getRouteAgentId = (): number | null => {
+  const raw = route.query.id
+  const idStr = Array.isArray(raw) ? raw[0] : raw
+  if (!idStr) return null
+  const n = parseInt(String(idStr), 10)
+  return Number.isNaN(n) ? null : n
+}
+
+// 进入 /create?id=xx 或 query 变化时，拉取详情并回显
+watch(
+  () => route.query.id,
+  async () => {
+    const agentId = getRouteAgentId()
+    if (!agentId) {
+      resetForm()
+      return
+    }
+
     loading.value = true
     try {
       const res = await getAgentDetail(agentId)
       const data = res.data
       agentForm.name = data.name
       agentForm.description = data.description ?? ''
-      // 回填已有文件列表（后端返回 filelist）
-      if (data.filelist && Array.isArray(data.filelist)) {
-        file_path_list.value = [...data.filelist]
-      }
+
+      fileList.value = []
+      uidToPath.value = {}
+      const serverList = Array.isArray(data.filelist) ? data.filelist : []
+      serverList.forEach((p, idx) => {
+        const uid = `server-${agentId}-${idx}`
+        uidToPath.value[uid] = p
+        fileList.value.push({
+          uid,
+          name: p.split('/').pop() || p,
+          status: 'success',
+          url: p,
+        } as UploadFile)
+      })
+      rebuildFilePathList()
     } catch {
       ElMessage.error('获取智能体详情失败')
       router.push('/')
     } finally {
       loading.value = false
     }
-  }
-})
+  },
+  { immediate: true }
+)
 
 // 文件上传前的验证
 const beforeUpload: UploadProps['beforeUpload'] = async (rawFile) => {
@@ -93,9 +131,10 @@ const UploadFiles = (file: UploadFile) => {
   uploadFileFunc(file.raw as File).then(res => {
     
     ElMessage.success('上传成功')
-    // 将文件添加到 fileList 中
-    fileList.value.push(file)
-    file_path_list.value.push(res.data.path) // 假设后端返回的文件路径在 res.data 中
+    const uid = String(file.uid ?? file.name)
+    const path = res.data.path as string
+    uidToPath.value[uid] = path
+    rebuildFilePathList()
     
   }).catch(() => {
     ElMessage.error('上传失败')
@@ -110,6 +149,11 @@ const handleExceed: UploadProps['onExceed'] = (files) => {
 
 // 文件移除
 const handleRemove: UploadProps['onRemove'] = (file) => {
+  const uid = String((file as any).uid ?? file.name)
+  if (uidToPath.value[uid]) {
+    delete uidToPath.value[uid]
+    rebuildFilePathList()
+  }
   ElMessage.info(`已移除文件: ${file.name}`)
 }
 
@@ -120,7 +164,12 @@ const handleSave = () => {
   }
   loading.value = true
   if (isEditMode.value && route.query.id) {
-    const agentId = parseInt(route.query.id as string)
+    const agentId = getRouteAgentId()
+    if (!agentId) {
+      ElMessage.error('无效的智能体 id')
+      loading.value = false
+      return
+    }
     updateAgent({
       id: agentId,
       name: agentForm.name,
@@ -198,7 +247,7 @@ const handleCancel = () => {
             :before-upload="beforeUpload"
             :on-exceed="handleExceed"
             :on-remove="handleRemove"
-            :file-list="fileList"
+            v-model:file-list="fileList"
             @change="UploadFiles"
           >
             <template #trigger>
