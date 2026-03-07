@@ -2,7 +2,7 @@
 import { ref, reactive, onMounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElButton, ElInput, ElMessage, ElUpload, UploadProps, UploadFile } from 'element-plus'
-import { UploadFilled } from '@element-plus/icons-vue'
+import { uploadFileFunc ,createAgent} from '@/api'
 
 interface AgentForm {
   name: string
@@ -23,6 +23,7 @@ const agentForm = reactive<AgentForm>({
 })
 const loading = ref(false)
 const fileList = ref<UploadFile[]>([])
+const file_path_list = ref<UploadFile[]>([])
 
 // 判断是否为编辑模式
 const isEditMode = computed(() => {
@@ -62,7 +63,7 @@ onMounted(() => {
 })
 
 // 文件上传前的验证
-const beforeUpload: UploadProps['beforeUpload'] = (rawFile) => {
+const beforeUpload: UploadProps['beforeUpload'] = async (rawFile) => {
   // 允许的文件类型
   const allowedTypes = [
     // 文本文件
@@ -72,19 +73,12 @@ const beforeUpload: UploadProps['beforeUpload'] = (rawFile) => {
     'text/javascript',
     'application/json',
     'application/xml',
-    // 图片文件
-    'image/jpeg',
-    'image/png',
-    'image/gif',
-    'image/webp',
-    'image/svg+xml',
-    'image/bmp'
   ]
   
   // 验证文件类型
   const isAllowedType = allowedTypes.includes(rawFile.type)
   if (!isAllowedType) {
-    ElMessage.error('只支持文本文件和图片文件！')
+    ElMessage.error('只支持文本文件！')
     return false
   }
   
@@ -95,9 +89,24 @@ const beforeUpload: UploadProps['beforeUpload'] = (rawFile) => {
     return false
   }
   
+  
   return true
 }
-
+const UploadFiles = (file: UploadFile) => {
+  console.log(file,'====');
+  uploadFileFunc(file.raw as File).then(res => {
+    
+    ElMessage.success('上传成功')
+    // 将文件添加到 fileList 中
+    fileList.value.push(file)
+    file_path_list.value.push(res.data.path) // 假设后端返回的文件路径在 res.data 中
+    
+  }).catch(() => {
+    ElMessage.error('上传失败')
+  })
+  
+   
+} 
 // 文件数量超出限制
 const handleExceed: UploadProps['onExceed'] = (files) => {
   ElMessage.warning(`当前限制选择 10 个文件，本次选择了 ${files.length} 个文件`)
@@ -109,10 +118,26 @@ const handleRemove: UploadProps['onRemove'] = (file) => {
 }
 
 const handleSave = () => {
-  if (!agentForm.name || !agentForm.description) {
+  if (!agentForm.name) {
     ElMessage.warning('请填写完整信息')
     return
   }
+  if (isEditMode.value && route.query.id) {
+    console.log('编辑');
+    
+  } else {
+    createAgent({
+      name: agentForm.name,
+      description: agentForm.description,
+      fileList: file_path_list.value // 这里只传文件名，实际应用中可能需要传文件路径或其他信息
+    }).then(() => {
+      ElMessage.success(isEditMode.value ? '修改成功！' : '创建成功！')
+      router.push('/')
+    }).catch(() => {
+      ElMessage.error('操作失败，请重试！')
+    } )
+  }
+ 
   
   // loading.value = true
   // 模拟保存操作
@@ -139,7 +164,7 @@ const handleCancel = () => {
         <span>{{ pageTitle }}</span>
       </div>
       <el-form :model="agentForm" label-width="150px" style="width: 80%; ">
-        <el-form-item label="智能体名称">
+        <el-form-item label="智能体名称" required :rules="[{ required: true, message: '请输入智能体名称', trigger: 'blur' }]">
         <el-input
             v-model="agentForm.name"
             placeholder="请输入智能体名称"
@@ -162,28 +187,27 @@ const handleCancel = () => {
         </el-form-item>
 
         <el-form-item label="上传文件（非必填）">
-        <el-upload
-            v-model:file-list="fileList"
+          <el-upload
+            ref="uploadRef"
             class="upload-demo"
-            drag
             action="#"
             :auto-upload="false"
             :before-upload="beforeUpload"
-            :limit="10"
             :on-exceed="handleExceed"
             :on-remove="handleRemove"
-            multiple
-        >
-            <el-icon class="el-icon--upload"><upload-filled /></el-icon>
-            <div class="el-upload__text">
-            将文件拖到此处，或<em>点击上传</em>
-            </div>
-            <template #tip>
-            <div class="el-upload__tip">
-                支持文本文件和图片文件，单个文件大小不超过 10MB
-            </div>
+            :file-list="fileList"
+            @change="UploadFiles"
+          >
+            <template #trigger>
+              <el-button type="primary">选择要上传的文件</el-button>
             </template>
-        </el-upload>
+
+            <template #tip>
+              <div class="el-upload__tip">
+                支持文本文件，单个文件大小不超过 10MB
+              </div>
+            </template>
+          </el-upload>
         </el-form-item>
 
         <div class="button-group">

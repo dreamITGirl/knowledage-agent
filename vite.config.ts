@@ -15,8 +15,7 @@ export default defineConfig({
       '/agents': {
         target: 'http://127.0.0.1:8000/agents',
         changeOrigin: true,
-        secure: false,
-        rewrite: (path) => path.replace(/^\/agents/, ''),
+        // rewrite: (path) => path.replace(/^\/agents/, ''),
       }
     }
   }

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref,reactive, onBeforeMount } from 'vue'
+import { ref, onBeforeMount } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElButton, ElCard, ElInput, ElMessage, ElTag, ElRow, ElCol, ElDropdown, ElDropdownMenu, ElDropdownItem, ElMessageBox } from 'element-plus'
 import { MoreFilled } from '@element-plus/icons-vue'
@@ -12,6 +12,7 @@ interface Agent {
   description: string
 }
 let agent_list= ref<Agent[]>([])
+const selectedAgent = ref<Agent | null>(null)
 const getAgentData = async () => {
   try {
     
@@ -70,6 +71,10 @@ const handleEdit = (agent: Agent) => {
     query: { id: agent.id.toString() }
   })
 }
+const questionAgent = (agent: Agent) => {
+  console.log(agent,'agent===');
+  
+}
 
 onBeforeMount(() => {
   getAgentData()
@@ -96,7 +101,7 @@ onBeforeMount(() => {
           </template>
             <div class="tech-stack">
               <div v-if="agent_list.length > 0">
-                    <div v-for="agent in agent_list" :key="agent.id" class="agent-tag" >
+                    <div v-for="agent in agent_list" :key="agent.id" class="agent-tag" @click="questionAgent(agent)">
                         <span>{{ agent.name }}</span>
                         <el-dropdown placement="bottom" trigger="hover">
                             <el-icon style="color:rgba(0,0,0,0.5); cursor: pointer;"><MoreFilled /></el-icon>
@@ -119,7 +124,7 @@ onBeforeMount(() => {
         <el-card class="demo-card">
           <template #header>
             <div class="card-header">
-              <span>对话框</span>
+              <span>{{ selectedAgent?.name || '智能体' }}</span>
             </div>
           </template>
           <div class="demo-content">
