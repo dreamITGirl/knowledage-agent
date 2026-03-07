@@ -37,3 +37,7 @@ export const uploadFileFunc = (file: File): Promise<ApiResponse<any>> => {
 export const askAgent = (data: { question: string; agentId: number,file_path: string[] }): Promise<ApiResponse<any>> => {
   return request.post('/content', data)
 } 
+// 智能体删除
+export const deleteAgent = (agentId:number): Promise<ApiResponse<any>> => {
+  return request.delete(`/${agentId}`)
+}

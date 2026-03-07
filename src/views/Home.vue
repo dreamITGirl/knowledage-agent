@@ -3,7 +3,7 @@ import { ref, onBeforeMount, onDeactivated } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElButton, ElCard, ElInput, ElMessage, ElTag, ElRow, ElCol, ElDropdown, ElDropdownMenu, ElDropdownItem, ElMessageBox } from 'element-plus'
 import { MoreFilled } from '@element-plus/icons-vue'
-import { askAgent, getAgentList } from '@/api/index'
+import { askAgent, deleteAgent, getAgentList } from '@/api/index'
 const router = useRouter()
 
 interface Agent {
@@ -64,12 +64,13 @@ const handleDelete = (agent: Agent) => {
       type: 'warning',
     }
   )
-    .then(() => {
-      const index = agent_list.value.findIndex(item => item.id === agent.id)
-      if (index > -1) {
-        agent_list.value.splice(index, 1)
+    .then( () => {
+       deleteAgent(agent.id).then(() => {
         ElMessage.success('删除成功')
-      }
+        getAgentData()
+      }).catch(() => {
+        ElMessage.error('删除失败')
+      })
     })
     .catch(() => {
       ElMessage.info('已取消删除')
