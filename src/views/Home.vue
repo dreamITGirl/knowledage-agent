@@ -81,12 +81,11 @@ const handleEdit = (agent: Agent) => {
     query: { id: agent.id.toString() }
   })
 }
-
 const questionAgent = (agent: Agent) => {
   selectedAgent.value = agent
-  console.log(selectedAgent.value.filelist,'selectedAgent');
+  inputMessage.value = ''
+  answerContent.value = ''
 }
-
 
 onBeforeMount(() => {
   getAgentData()
