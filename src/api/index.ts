@@ -5,3 +5,29 @@ import type { ApiResponse } from '@/utils/request'
 export const getAgentList = (): Promise<ApiResponse<any>> => {
   return request.get('/list')
 }
+
+// 获取智能体详情（用于编辑时回填）
+export const getAgentDetail = (agentId: number): Promise<ApiResponse<{ id: number; name: string; description: string; filelist?: string[] }>> => {
+  return request.get(`/${agentId}`)
+}
+
+// 创建智能体
+export const createAgent = (data: { name: string; description?: string; fileList?: string[] }) => {
+  return request.post('/add', data)
+}
+
+// 更新智能体
+export const updateAgent = (data: { id: number; name: string; description?: string; fileList?: string[] }) => {
+  return request.put('/update', data)
+}
+
+// 上传文件
+export const uploadFileFunc = (file: File): Promise<ApiResponse<any>> => {
+  const formData = new FormData()
+  formData.append('file', file)
+  return request.post('/upload', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  })
+}
