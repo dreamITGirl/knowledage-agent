@@ -31,3 +31,9 @@ export const uploadFileFunc = (file: File): Promise<ApiResponse<any>> => {
     }
   })
 }
+
+
+// 提问接口
+export const askAgent = (data: { question: string; agentId: number,file_path: string[] }): Promise<ApiResponse<any>> => {
+  return request.post('/content', data)
+} 

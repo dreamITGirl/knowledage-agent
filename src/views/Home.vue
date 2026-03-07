@@ -1,17 +1,17 @@
 <script setup lang="ts">
-import { ref,reactive, onBeforeMount } from 'vue'
+import { ref, onBeforeMount, onDeactivated } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElButton, ElCard, ElInput, ElMessage, ElTag, ElRow, ElCol, ElDropdown, ElDropdownMenu, ElDropdownItem, ElMessageBox } from 'element-plus'
 import { MoreFilled } from '@element-plus/icons-vue'
-import { getAgentList } from '@/api/index'
+import { askAgent, getAgentList } from '@/api/index'
 const router = useRouter()
 
 interface Agent {
   id: number
   name: string
   description: string
+  filelist?: string[]
 }
-let agent_list= ref<Agent[]>([])
 const getAgentData = async () => {
   try {
     
@@ -21,8 +21,11 @@ const getAgentData = async () => {
     console.error('获取智能体列表失败:', error)
   }
 } 
+let agent_list= ref<Agent[]>([])
 const inputMessage = ref<string>('')
 const loading = ref<boolean>(false)
+const selectedAgent = ref<Agent | null>(null)
+const answerContent = ref<string>('')
 
 
 
@@ -33,15 +36,23 @@ const handleCreate = () => {
 
 const handleSend = () => {
   if (!inputMessage.value) {
-    ElMessage.warning('请输入内容')
+    ElMessage.warning('请输入提示词')
     return
   }
   loading.value = true
-  setTimeout(() => {
-    ElMessage.success(`发送成功: ${inputMessage.value}`)
-    inputMessage.value = ''
+  askAgent({
+    question: inputMessage.value,
+    agentId: selectedAgent.value?.id || 0,
+    file_path: selectedAgent.value?.filelist || []
+  }).then(response => {
+    ElMessage.success(`回答: ${response.data}`)
+    answerContent.value = response.data ?? ''
+  }).catch(error => {
+    console.error('提问失败:', error)
+    ElMessage.error('提问失败')
+  }).finally(() => {
     loading.value = false
-  }, 1000)
+  })  
 }
 const handleDelete = (agent: Agent) => {
   ElMessageBox.confirm(
@@ -54,9 +65,9 @@ const handleDelete = (agent: Agent) => {
     }
   )
     .then(() => {
-      const index = agent_list.findIndex(item => item.id === agent.id)
+      const index = agent_list.value.findIndex(item => item.id === agent.id)
       if (index > -1) {
-        agent_list.splice(index, 1)
+        agent_list.value.splice(index, 1)
         ElMessage.success('删除成功')
       }
     })
@@ -71,10 +82,20 @@ const handleEdit = (agent: Agent) => {
   })
 }
 
+const questionAgent = (agent: Agent) => {
+  selectedAgent.value = agent
+  console.log(selectedAgent.value.filelist,'selectedAgent');
+}
+
+
 onBeforeMount(() => {
   getAgentData()
 })
-
+onDeactivated(() => {
+  selectedAgent.value = null
+  inputMessage.value = ''
+  answerContent.value = ''
+})
 </script>
 
 <template>
@@ -96,7 +117,9 @@ onBeforeMount(() => {
           </template>
             <div class="tech-stack">
               <div v-if="agent_list.length > 0">
-                    <div v-for="agent in agent_list" :key="agent.id" class="agent-tag" >
+                    <div v-for="agent in agent_list" :key="agent.id" class="agent-tag" @click="()=>{
+                      questionAgent(agent)
+                    }">
                         <span>{{ agent.name }}</span>
                         <el-dropdown placement="bottom" trigger="hover">
                             <el-icon style="color:rgba(0,0,0,0.5); cursor: pointer;"><MoreFilled /></el-icon>
@@ -119,19 +142,45 @@ onBeforeMount(() => {
         <el-card class="demo-card">
           <template #header>
             <div class="card-header">
-              <span>对话框</span>
+              <span>{{ selectedAgent?.name || '千问' }}</span>
             </div>
           </template>
           <div class="demo-content">
-            <el-input
-              v-model="inputMessage"
-              type="textarea"
-              placeholder="请输入问题..."
-              :autosize="{ minRows: 3, maxRows: 5 }"
-              :disabled="loading"
-              @keyup.enter="handleSend"
-            />
+            <div class="lt">
+              <el-input
+                v-model="inputMessage"
+                type="textarea"
+                placeholder="请输入问题..."
+                :autosize="{ minRows: 3, maxRows: 5 }"
+                :disabled="loading"
+                @keyup.enter="handleSend"
+              />
+            </div>
+            <div>
+              <el-input
+                v-model="answerContent"
+                type="textarea"
+                placeholder="智能体回答将显示在这里..."
+                :autosize="{ minRows: 3, maxRows: 5 }"
+                readonly
+                />
+            </div>
+
+           <div v-if="selectedAgent?.filelist" class="description">
+              <p><strong>知识库文件:</strong></p>
+              <ul>
+                <li v-for="(file, index) in selectedAgent.filelist" :key="index">
+                 {{ file.split('/').pop() }}
+                </li>
+              </ul>
+           </div>
             <div class="button-group">
+              <el-button type="default"  @click="() => {
+                inputMessage = ''
+                answerContent = ''
+              }">
+                清空
+              </el-button>
               <el-button type="primary" :loading="loading" @click="handleSend">
                 提问
               </el-button>
@@ -188,6 +237,9 @@ onBeforeMount(() => {
   flex-direction: column;
   gap: 15px;
 }
+/* .demo-content .lt{
+  
+} */
 
 .button-group {
   display: flex;

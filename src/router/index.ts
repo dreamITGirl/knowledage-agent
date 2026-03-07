@@ -13,11 +13,6 @@ const routes: RouteRecordRaw[] = [
     name: 'CreateAgent',
     component: CreateAgent
   },
-  {
-    path:'/demo',
-    name:'Demo',
-    component: () => import('../views/demo.vue')
-  }
 ]
 
 const router = createRouter({

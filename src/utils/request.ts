@@ -10,7 +10,7 @@ export interface ApiResponse<T = any> {
 // 创建axios实例
 const service: AxiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL, // 基础URL，可根据环境变量配置
-  timeout: 15000, // 请求超时时间
+  timeout: 150000, // 请求超时时间
   headers: {
     'Content-Type': 'application/json;charset=UTF-8',
   },
