@@ -37,6 +37,12 @@ export const uploadFileFunc = (file: File): Promise<ApiResponse<any>> => {
 export const askAgent = (data: { question: string; agentId: number,file_path: string[] }): Promise<ApiResponse<any>> => {
   return request.post('/content', data)
 } 
+
+// 千问直接提问接口（无agent ID时使用）
+export const directQuery = (data: { question: string }): Promise<ApiResponse<any>> => {
+  return request.post('/direct-query', data)
+}
+
 // 智能体删除
 export const deleteAgent = (agentId:number): Promise<ApiResponse<any>> => {
   return request.delete(`/${agentId}`)
