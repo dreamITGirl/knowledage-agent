@@ -212,10 +212,11 @@ const handleCancel = () => {
 
 <template>
   <div class="create-container">
+      <div class="form-wrapper">
       <div class="card-header">
         <span>{{ pageTitle }}</span>
       </div>
-      <el-form :model="agentForm" label-width="150px" style="width: 80%; ">
+      <el-form :model="agentForm" label-width="150px" style="width: 100%;">
         <el-form-item label="智能体名称" required :rules="[{ required: true, message: '请输入智能体名称', trigger: 'blur' }]">
         <el-input
             v-model="agentForm.name"
@@ -271,16 +272,29 @@ const handleCancel = () => {
         </el-button>
         </div>
       </el-form>
+      </div>
   </div>
 </template>
 
 <style scoped>
 .create-container {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  padding: 40px 20px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  padding: 48px 24px;
   display: flex;
-  align-items: flex-start;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  background: var(--surface-2);
+}
+
+.form-wrapper {
+  width: 100%;
+  max-width: 680px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 36px 40px;
+  box-shadow: var(--shadow-md);
 }
 
 .create-card {
@@ -298,10 +312,23 @@ const handleCancel = () => {
 
 
 .card-header {
-  font-size: 1.75rem;
-  font-weight: 600;
-  color: #2c3e50;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
   letter-spacing: -0.5px;
+  margin-bottom: 32px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-header::before {
+  content: '';
+  display: inline-block;
+  width: 4px;
+  height: 24px;
+  background: linear-gradient(to bottom, var(--primary), #8b5cf6);
+  border-radius: 2px;
 }
 
 .el-form {
@@ -316,8 +343,8 @@ const handleCancel = () => {
 
 .el-form :deep(.el-form-item__label) {
   font-weight: 500;
-  color: #495057;
-  font-size: 0.95rem;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
 }
 
 
@@ -372,41 +399,36 @@ const handleCancel = () => {
   gap: 12px;
   margin-top: 32px;
   padding-top: 24px;
-  border-top: 1px solid #e9ecef;
+  border-top: 1px solid var(--border);
 }
 
 .button-group .el-button {
-  min-width: 120px;
-  border-radius: 8px;
+  min-width: 100px;
+  border-radius: 8px !important;
   font-weight: 500;
-  letter-spacing: 0.5px;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease !important;
 }
 
 .cancel-btn {
-  border-color: #ced4da;
-  color: #6c757d;
+  border-color: var(--border) !important;
+  color: var(--text-secondary) !important;
 }
 
 .cancel-btn:hover {
-  border-color: #adb5bd;
-  color: #495057;
-  background-color: #f8f9fa;
+  border-color: var(--text-muted) !important;
+  background-color: var(--surface-3) !important;
 }
 
 .submit-btn {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border: none;
+  background: var(--primary) !important;
+  border-color: var(--primary) !important;
 }
 
 .submit-btn:hover {
-  background: linear-gradient(135deg, #5a6fd6 0%, #6a4190 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
-}
-
-.submit-btn:active {
-  transform: translateY(0);
+  background: var(--primary-dark) !important;
+  border-color: var(--primary-dark) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35) !important;
 }
 
 /* 响应式设计 */
